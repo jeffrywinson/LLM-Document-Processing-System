@@ -1,9 +1,9 @@
 # main.py
 
 import ingest
+import vector_store
 
 # Define the path to the directory containing the documents
-# This assumes your 'documents' folder is in the same directory as main.py
 DOCUMENTS_DIR = "documents"
 
 def main():
@@ -18,13 +18,11 @@ def main():
     # Step 2: Split the documents into chunks
     chunks = ingest.split_into_chunks(documents)
     
-    # We will add the next steps (embedding and indexing) here later.
-    print("\n--- Example of a Chunk ---")
-    print(chunks[1].page_content)
-    print("\n--- Metadata of the Chunk ---")
-    print(chunks[1].metadata)
+    # Step 3: Create the FAISS vector store from the chunks
+    # This will create embeddings and save the index to a local directory.
+    vector_store.create_vector_store(chunks)
     
-    print("\nProcess completed.")
+    print("\nProcess completed. The vector store is ready.")
 
 if __name__ == "__main__":
     main()
