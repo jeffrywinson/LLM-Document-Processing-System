@@ -1,0 +1,19 @@
+# your-llm-project/requirements.txt
+
+# Core ML libraries (pinned for compatibility)
+transformers==4.41.2
+peft==0.10.0
+accelerate
+bitsandbytes
+
+# LangChain stack
+langchain
+langchain_community
+sentence-transformers
+
+# Document loaders and vector store
+pypdf
+docx2txt
+faiss-cpu
+
+# Note: torch, torchvision, and faiss-gpu are installed separately with conda

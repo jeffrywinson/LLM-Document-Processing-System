@@ -1,28 +1,24 @@
-# main.py
+# your-llm-project/retrieval_engine/main.py
 
 import ingest
 import vector_store
-
-# Define the path to the directory containing the documents
-DOCUMENTS_DIR = "documents"
+import config
 
 def main():
     """
     Main function to run the data ingestion and processing pipeline.
+    This creates the vector store that the LLM application will use.
     """
-    print("Starting the data ingestion process...")
+    print("--- Starting Data Ingestion and Vector Store Creation ---")
+    documents = ingest.load_documents(config.DOCUMENTS_DIR)
     
-    # Step 1: Load the documents from the specified directory
-    documents = ingest.load_documents(DOCUMENTS_DIR)
-    
-    # Step 2: Split the documents into chunks
+    if not documents:
+        print("No documents found. Please add PDF/DOCX files to the 'documents' folder.")
+        return
+
     chunks = ingest.split_into_chunks(documents)
-    
-    # Step 3: Create the FAISS vector store from the chunks
-    # This will create embeddings and save the index to a local directory.
     vector_store.create_vector_store(chunks)
-    
-    print("\nProcess completed. The vector store is ready.")
+    print("--- Vector Store is ready. ---")
 
 if __name__ == "__main__":
     main()

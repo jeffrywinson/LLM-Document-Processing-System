@@ -1,50 +1,42 @@
-# llm_application/llm_handler.py (CPU Version)
+# your-llm-project/llm_application/llm_handler.py
 
-import torch
 import json
-from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
+import re
+from transformers import AutoModelForCausalLM, AutoTokenizer
 from .prompt_template import MASTER_PROMPT
+import config
 
-def load_pipeline():
-    """Loads and returns the LLM pipeline to run on the CPU."""
-    model_id = "microsoft/Phi-3-mini-4k-instruct"
-
-    print("Loading Phi-3-mini model for CPU...")
-    
-    # Load the model without any quantization
+def load_model_and_tokenizer():
+    """Loads and returns the LLM model and tokenizer."""
+    print(f"Loading {config.LLM_MODEL_ID} model and tokenizer...")
     model = AutoModelForCausalLM.from_pretrained(
-        model_id,
+        config.LLM_MODEL_ID,
+        device_map="auto",
         trust_remote_code=True
     )
-    
-    # Load the tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    tokenizer = AutoTokenizer.from_pretrained(config.LLM_MODEL_ID)
+    print("Model and tokenizer loaded successfully.")
+    return model, tokenizer
 
-    # Create the pipeline. It will default to CPU if no compatible GPU is found.
-    llm_pipeline = pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
-    )
-    
-    print("LLM pipeline loaded successfully.")
-    return llm_pipeline
-
-def generate_decision_json(llm_pipeline, query: str, retrieved_docs: list) -> dict:
-    """Uses the LLM to generate a structured JSON decision."""
+def generate_decision_json(model, tokenizer, query: str, retrieved_docs: list) -> dict:
+    """Uses the model directly to generate a structured JSON decision."""
     context = "\n\n".join([doc.page_content for doc in retrieved_docs])
     prompt = MASTER_PROMPT.format(context=context, query=query)
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     
-    outputs = llm_pipeline(
-        prompt, max_new_tokens=256, do_sample=False,
-        eos_token_id=llm_pipeline.tokenizer.eos_token_id
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=256,
+        eos_token_id=tokenizer.eos_token_id
     )
-    raw_response = outputs[0]['generated_text'].split("<|assistant|>")[1]
+    
+    full_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
     
     try:
-        json_part = raw_response[raw_response.find('{'):raw_response.rfind('}')+1]
-        decision = json.loads(json_part)
-        return decision
+        raw_response = full_response.split("<|assistant|>")[1]
+        match = re.search(r"```json\s*\n(.*?)\n\s*```", raw_response, re.DOTALL)
+        if match:
+            return json.loads(match.group(1).strip())
     except Exception as e:
-        print(f"Error parsing LLM response: {e}\nRaw Response: {raw_response}")
+        print(f"Error parsing LLM response: {e}\nRaw Response: {full_response}")
         return {"decision": "Error", "amount": 0.0, "justification": "Failed to parse valid JSON."}

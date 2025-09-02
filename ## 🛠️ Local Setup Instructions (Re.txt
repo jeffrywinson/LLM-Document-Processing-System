@@ -1,0 +1,34 @@
+## 🛠️ Local Setup Instructions (Recommended)
+The best way to recreate your successful Kaggle environment is to use the Conda package manager, as it handles faiss-gpu and pytorch correctly.
+
+Install Conda: If you don't have it, install Miniconda or Anaconda.
+
+Create a Conda Environment: Open your terminal or Anaconda Prompt and run:
+
+Bash
+
+conda create -n llm_project python=3.11 -y
+conda activate llm_project
+Install GPU Libraries with Conda: This is the most crucial step.
+
+Bash
+
+conda install -c pytorch faiss-gpu=1.7.4 pytorch=2.3.0 torchvision=0.18.0 pytorch-cuda=12.1 -y
+Install Remaining Packages with Pip: Now, install all the other libraries from your requirements.txt file.
+
+Bash
+
+pip install -r requirements.txt
+## 🏃‍♀️ How to Run Your Project
+Place Documents: Put your .pdf and .docx files inside the your-llm-project/retrieval_engine/documents/ folder.
+
+Create the Vector Store: Open your terminal, activate the conda environment (conda activate llm_project), navigate to your project folder, and run the ingestion script once.
+
+Bash
+
+python retrieval_engine/main.py
+Get an Answer: Run the main application script to ask a question.
+
+Bash
+
+python llm_application/app.py

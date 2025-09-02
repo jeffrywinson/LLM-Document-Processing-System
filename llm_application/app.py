@@ -1,35 +1,36 @@
-# llm_application/app.py
+# your-llm-project/llm_application/app.py
 
-import json
-import sys
 import os
+import sys
+import json
 
-# This block allows this script to find the sibling 'retrieval_engine' folder
+# This boilerplate allows the script to find modules in the parent directory (your-llm-project/)
+# This is necessary to import from the 'retrieval_engine' and 'config'
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import the necessary functions
 from retrieval_engine.vector_store import get_retriever
-from llm_application.llm_handler import load_pipeline, generate_decision_json
+from llm_application.llm_handler import load_model_and_tokenizer, generate_decision_json
 
-def process_query(retriever, llm_pipeline, user_query: str) -> dict:
-    """Orchestrates the entire RAG process."""
-    print("🔎 Retrieving relevant documents...")
-    retrieved_docs = retriever.invoke(user_query)
-    
+def main():
+    """
+    Main application function to ask a question and get a decision.
+    """
+    print("--- Initializing the RAG Pipeline ---")
+    retriever = get_retriever()
+    model, tokenizer = load_model_and_tokenizer()
+
+    query = "I am a 45-year-old man who needs knee replacement surgery. My policy has been active for 3 years. Am I covered?"
+    print(f"\n🚀 Processing Query: '{query}'")
+
+    retrieved_docs = retriever.invoke(query)
+    print("\n🔎 Retrieved relevant documents.")
+
     print("\n🧠 Asking the LLM for a decision...")
-    final_decision = generate_decision_json(llm_pipeline, user_query, retrieved_docs)
-    
-    return final_decision
+    final_decision = generate_decision_json(model, tokenizer, query, retrieved_docs)
+
+    print("\n--- ✅ FINAL DECISION ---")
+    print(json.dumps(final_decision, indent=2))
+    print("------------------------\n")
 
 if __name__ == "__main__":
-    # Load the tools once at the start
-    retriever = get_retriever()
-    llm_pipeline = load_pipeline()
-    
-    # Example query to test the system
-    query = "I am a 45-year-old man who needs knee replacement surgery. My policy has been active for 3 years. Am I covered?"
-    
-    result = process_query(retriever, llm_pipeline, query)
-    
-    print("\n--- FINAL DECISION ---")
-    print(json.dumps(result, indent=2))
+    main()
